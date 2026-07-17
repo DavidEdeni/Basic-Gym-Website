@@ -4,3 +4,4 @@ How To Run The Basic Gym Website:
 3. Open a Visual Studio Code terminal.
 4. Type "freebuff" in the terminal.
 5. Type "Run the website" in the Freebuff terminal.
+6. Open a new Google Chrome browser and type "http:8000"
