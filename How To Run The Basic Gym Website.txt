@@ -1,0 +1,4 @@
+How To Run The Basic Gym Website:
+1. Open Microsoft Visual Studio Code.
+2. Open the folder called Basic Gym Website: "C:\Users\david\Programming_And_Website_Development\Freebuff_Websites\Basic Gym Website"
+3. Open a Visual Studio Code terminal.
