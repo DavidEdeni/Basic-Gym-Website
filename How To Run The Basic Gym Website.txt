@@ -1,7 +1,14 @@
 How To Run The Basic Gym Website:
+
+Note: You can only do this process a limited number of times per day.
+Freebuff gives you about 5 premium sessions daily.
+Technically these 5 premium sessions reset every 11 hours, so you get about 5 sessions a day because you aren't on your computer for 24 hours a day.
+
+Steps To Run The Website:
 1. Open Microsoft Visual Studio Code.
 2. Open the folder called Basic Gym Website: "C:\Users\david\Programming_And_Website_Development\Freebuff_Websites\Basic Gym Website"
 3. Open a Visual Studio Code terminal.
 4. Type "freebuff" in the terminal.
 5. Type "Run the website" in the Freebuff terminal.
-6. Open a new Google Chrome browser and type "http:8000"
+6. Open a new Google Chrome browser page and type "localhost:8000"
+7. The website will open and remain running as long as your server is up.
