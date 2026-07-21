@@ -20,19 +20,33 @@ document.addEventListener('DOMContentLoaded', () => {
     handleScroll(); // Check initial scroll position
 
     // ===== Mobile navigation toggle =====
+    function setMenuState(isOpen) {
+        navToggle.classList.toggle('active', isOpen);
+        navMenu.classList.toggle('active', isOpen);
+        navToggle.setAttribute('aria-expanded', String(isOpen));
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+    }
+
     function toggleMenu() {
-        navToggle.classList.toggle('active');
-        navMenu.classList.toggle('active');
-        document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+        setMenuState(!navMenu.classList.contains('active'));
     }
 
     navToggle.addEventListener('click', toggleMenu);
+
+    // Reset the mobile menu when leaving the mobile breakpoint so the body
+    // scroll lock and open state don't persist on desktop.
+    const mobileBreakpoint = window.matchMedia('(max-width: 768px)');
+    mobileBreakpoint.addEventListener('change', (e) => {
+        if (!e.matches) {
+            setMenuState(false);
+        }
+    });
 
     // Close mobile menu when a nav link is clicked
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
             if (navMenu.classList.contains('active')) {
-                toggleMenu();
+                setMenuState(false);
             }
         });
     });
@@ -61,24 +75,24 @@ document.addEventListener('DOMContentLoaded', () => {
     function setActiveLink() {
         const sections = document.querySelectorAll('section[id]');
         const scrollPosition = window.scrollY + navbar.offsetHeight + 100;
+        let activeId = null;
 
         sections.forEach(section => {
             const sectionTop = section.offsetTop;
             const sectionHeight = section.offsetHeight;
-            const sectionId = section.getAttribute('id');
 
             if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-                navLinks.forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href') === `#${sectionId}`) {
-                        link.classList.add('active');
-                    }
-                });
+                activeId = section.getAttribute('id');
             }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.toggle('active', activeId !== null && link.getAttribute('href') === `#${activeId}`);
         });
     }
 
     window.addEventListener('scroll', setActiveLink);
+    setActiveLink(); // Set initial active link (e.g. when loading at a hash)
 
     // ===== Form handling =====
     function setupFormHandler(form, buildMessage) {
@@ -165,12 +179,14 @@ document.addEventListener('DOMContentLoaded', () => {
         '.feature-card, .class-card, .trainer-card, .pricing-card, .contact-form'
     );
 
-    revealElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        revealObserver.observe(el);
-    });
+    if ('IntersectionObserver' in window) {
+        revealElements.forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            revealObserver.observe(el);
+        });
+    }
 
     // Add revealed class styles dynamically
     const style = document.createElement('style');
