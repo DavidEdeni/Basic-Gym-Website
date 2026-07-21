@@ -35,12 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Reset the mobile menu when leaving the mobile breakpoint so the body
     // scroll lock and open state don't persist on desktop.
-    const mobileBreakpoint = window.matchMedia('(max-width: 768px)');
-    mobileBreakpoint.addEventListener('change', (e) => {
-        if (!e.matches) {
-            setMenuState(false);
-        }
-    });
+    if (typeof window.matchMedia === 'function') {
+        const mobileBreakpoint = window.matchMedia('(max-width: 768px)');
+        mobileBreakpoint.addEventListener('change', (e) => {
+            if (!e.matches) {
+                setMenuState(false);
+            }
+        });
+    }
 
     // Close mobile menu when a nav link is clicked
     navLinks.forEach(link => {
@@ -159,27 +161,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===== Scroll reveal animation =====
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.1
-    };
-
-    const revealObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('revealed');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, observerOptions);
-
-    // Observe cards and sections for reveal animation
+    // Observe cards and sections for reveal animation. Guard the whole feature
+    // behind IntersectionObserver support so unsupported browsers don't crash
+    // (and don't leave content hidden).
     const revealElements = document.querySelectorAll(
         '.feature-card, .class-card, .trainer-card, .pricing-card, .contact-form'
     );
 
     if ('IntersectionObserver' in window) {
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
         revealElements.forEach(el => {
             el.style.opacity = '0';
             el.style.transform = 'translateY(30px)';
