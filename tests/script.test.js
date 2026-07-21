@@ -1,7 +1,8 @@
-const path = require('path');
-const { pageFixture } = require('./fixture');
-
-const SCRIPT_PATH = path.resolve(__dirname, '..', 'script.js');
+import { jest } from '@jest/globals';
+import { pageFixture } from './fixture.js';
+// Importing for its side effect: script.js registers a single
+// DOMContentLoaded listener that each test drives against a fresh DOM.
+import '../script.js';
 
 // Captures the most recently constructed IntersectionObserver so tests can
 // drive its callback manually (jsdom does not implement IntersectionObserver).
@@ -32,10 +33,6 @@ function setScrollY(value) {
   Object.defineProperty(window, 'scrollY', { value, configurable: true });
   Object.defineProperty(window, 'pageYOffset', { value, configurable: true });
 }
-
-// Load the script once. Its body only registers a single DOMContentLoaded
-// listener; each test dispatches that event against a freshly built DOM.
-require(SCRIPT_PATH);
 
 // script.js attaches listeners to the shared jsdom window/document that would
 // otherwise leak across tests (each run re-registers "scroll" handlers whose
@@ -74,6 +71,19 @@ function loadPage() {
 
 beforeEach(() => {
   jest.useFakeTimers();
+
+  // jsdom does not implement matchMedia; script.js uses it to reset the mobile
+  // menu when leaving the mobile breakpoint.
+  window.matchMedia = jest.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  }));
 
   lastObserver = undefined;
   window.IntersectionObserver = MockIntersectionObserver;

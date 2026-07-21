@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+export function initApp() {
     // ===== Elements =====
     const navbar = document.getElementById('navbar');
     const navToggle = document.getElementById('navToggle');
@@ -197,4 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     `;
     document.head.appendChild(style);
-});
+}
+
+document.addEventListener('DOMContentLoaded', initApp);

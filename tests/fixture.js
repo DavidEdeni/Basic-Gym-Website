@@ -1,7 +1,7 @@
 // Minimal DOM fixture mirroring the structure that script.js depends on in
 // index.html (navbar, mobile toggle, nav links, sections, forms and the
 // elements targeted by the scroll-reveal animation).
-const pageFixture = `
+export const pageFixture = `
   <nav class="navbar" id="navbar">
     <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
       <span class="hamburger"></span>
@@ -34,5 +34,3 @@ const pageFixture = `
     </form>
   </footer>
 `;
-
-module.exports = { pageFixture };
