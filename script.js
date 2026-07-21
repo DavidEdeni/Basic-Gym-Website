@@ -23,22 +23,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===== Mobile navigation toggle =====
+    function setMenuState(isOpen) {
+        if (!navToggle || !navMenu) return;
+        navToggle.classList.toggle('active', isOpen);
+        navMenu.classList.toggle('active', isOpen);
+        navToggle.setAttribute('aria-expanded', String(isOpen));
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+    }
+
     function toggleMenu() {
         if (!navToggle || !navMenu) return;
-        navToggle.classList.toggle('active');
-        navMenu.classList.toggle('active');
-        document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+        setMenuState(!navMenu.classList.contains('active'));
     }
 
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', toggleMenu);
     }
 
+    // Reset the mobile menu when leaving the mobile breakpoint so the body
+    // scroll lock and open state don't persist on desktop.
+    const mobileBreakpoint = window.matchMedia('(max-width: 768px)');
+    mobileBreakpoint.addEventListener('change', (e) => {
+        if (!e.matches) {
+            setMenuState(false);
+        }
+    });
+
     // Close mobile menu when a nav link is clicked
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
             if (navMenu && navMenu.classList.contains('active')) {
-                toggleMenu();
+                setMenuState(false);
             }
         });
     });
@@ -77,47 +92,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const sections = document.querySelectorAll('section[id]');
         const navHeight = navbar ? navbar.offsetHeight : 0;
         const scrollPosition = window.scrollY + navHeight + 100;
+        let activeId = null;
 
         sections.forEach(section => {
             const sectionTop = section.offsetTop;
             const sectionHeight = section.offsetHeight;
-            const sectionId = section.getAttribute('id');
 
             if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-                navLinks.forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href') === `#${sectionId}`) {
-                        link.classList.add('active');
-                    }
-                });
+                activeId = section.getAttribute('id');
             }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.toggle('active', activeId !== null && link.getAttribute('href') === `#${activeId}`);
         });
     }
 
     window.addEventListener('scroll', setActiveLink);
+    setActiveLink(); // Set initial active link (e.g. when loading at a hash)
 
-    // ===== Contact form handling =====
-    if (contactForm) {
-        contactForm.addEventListener('submit', (e) => {
+    // ===== Form handling =====
+    function setupFormHandler(form, buildMessage) {
+        if (!form) return;
+
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
-
-            const formData = new FormData(contactForm);
-            const name = formData.get('name');
-
-            // Simple validation feedback
-            showNotification(`Thanks, ${name}! Your message has been sent. We'll get back to you soon.`);
-            contactForm.reset();
+            showNotification(buildMessage(new FormData(form)));
+            form.reset();
         });
     }
 
-    // ===== Newsletter form handling =====
-    if (newsletterForm) {
-        newsletterForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            showNotification('Thanks for subscribing to our newsletter!');
-            newsletterForm.reset();
-        });
-    }
+    setupFormHandler(contactForm, (data) =>
+        `Thanks, ${data.get('name')}! Your message has been sent. We'll get back to you soon.`
+    );
+
+    setupFormHandler(newsletterForm, () => 'Thanks for subscribing to our newsletter!');
 
     // ===== Notification helper =====
     function showNotification(message) {
