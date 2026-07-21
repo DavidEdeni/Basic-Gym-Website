@@ -80,28 +80,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('scroll', setActiveLink);
 
-    // ===== Contact form handling =====
-    if (contactForm) {
-        contactForm.addEventListener('submit', (e) => {
+    // ===== Form handling =====
+    function setupFormHandler(form, buildMessage) {
+        if (!form) return;
+
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
-
-            const formData = new FormData(contactForm);
-            const name = formData.get('name');
-
-            // Simple validation feedback
-            showNotification(`Thanks, ${name}! Your message has been sent. We'll get back to you soon.`);
-            contactForm.reset();
+            showNotification(buildMessage(new FormData(form)));
+            form.reset();
         });
     }
 
-    // ===== Newsletter form handling =====
-    if (newsletterForm) {
-        newsletterForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            showNotification('Thanks for subscribing to our newsletter!');
-            newsletterForm.reset();
-        });
-    }
+    setupFormHandler(contactForm, (data) =>
+        `Thanks, ${data.get('name')}! Your message has been sent. We'll get back to you soon.`
+    );
+
+    setupFormHandler(newsletterForm, () => 'Thanks for subscribing to our newsletter!');
 
     // ===== Notification helper =====
     function showNotification(message) {
