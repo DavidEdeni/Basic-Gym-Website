@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ===== Navbar scroll effect =====
     function handleScroll() {
+        if (!navbar) return;
         if (window.scrollY > 50) {
             navbar.classList.add('scrolled');
         } else {
@@ -16,22 +17,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Check initial scroll position
+    if (navbar) {
+        window.addEventListener('scroll', handleScroll);
+        handleScroll(); // Check initial scroll position
+    }
 
     // ===== Mobile navigation toggle =====
     function toggleMenu() {
+        if (!navToggle || !navMenu) return;
         navToggle.classList.toggle('active');
         navMenu.classList.toggle('active');
         document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
     }
 
-    navToggle.addEventListener('click', toggleMenu);
+    if (navToggle && navMenu) {
+        navToggle.addEventListener('click', toggleMenu);
+    }
 
     // Close mobile menu when a nav link is clicked
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
-            if (navMenu.classList.contains('active')) {
+            if (navMenu && navMenu.classList.contains('active')) {
                 toggleMenu();
             }
         });
@@ -41,12 +47,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             const href = this.getAttribute('href');
-            if (href === '#') return;
+            if (!href || href === '#') return;
 
-            const target = document.querySelector(href);
+            // querySelector throws a SyntaxError on malformed selectors
+            // (e.g. "#123"); catch it so the click handler still works.
+            let target;
+            try {
+                target = document.querySelector(href);
+            } catch (err) {
+                console.warn(`Skipping smooth scroll for invalid selector "${href}":`, err);
+                return;
+            }
+
             if (target) {
                 e.preventDefault();
-                const navHeight = navbar.offsetHeight;
+                const navHeight = navbar ? navbar.offsetHeight : 0;
                 const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
 
                 window.scrollTo({
@@ -60,7 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===== Active nav link on scroll =====
     function setActiveLink() {
         const sections = document.querySelectorAll('section[id]');
-        const scrollPosition = window.scrollY + navbar.offsetHeight + 100;
+        const navHeight = navbar ? navbar.offsetHeight : 0;
+        const scrollPosition = window.scrollY + navHeight + 100;
 
         sections.forEach(section => {
             const sectionTop = section.offsetTop;
@@ -151,32 +167,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===== Scroll reveal animation =====
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.1
-    };
-
-    const revealObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('revealed');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, observerOptions);
-
-    // Observe cards and sections for reveal animation
     const revealElements = document.querySelectorAll(
         '.feature-card, .class-card, .trainer-card, .pricing-card, .contact-form'
     );
 
-    revealElements.forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(30px)';
-        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        revealObserver.observe(el);
-    });
+    function revealAll() {
+        revealElements.forEach(el => el.classList.add('revealed'));
+    }
+
+    // If IntersectionObserver is unavailable, reveal everything immediately
+    // rather than hiding content behind an animation that can never run.
+    if (!('IntersectionObserver' in window)) {
+        revealAll();
+    } else {
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Observe cards and sections for reveal animation. If setup fails for
+        // any reason, fall back to revealing content so it never stays hidden.
+        try {
+            revealElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                revealObserver.observe(el);
+            });
+        } catch (err) {
+            console.error('Scroll reveal setup failed; showing content directly:', err);
+            revealAll();
+        }
+    }
 
     // Add revealed class styles dynamically
     const style = document.createElement('style');
